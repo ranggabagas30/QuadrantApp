@@ -6,6 +6,7 @@ import com.quadrantapp.core.base.BaseViewModel
 import com.quadrantapp.core.extension.NonNullMutableLiveData
 import com.quadrantapp.core.extension.StatefulLiveData
 import com.quadrantapp.core.util.LiveDataUtil.add
+import com.quadrantapp.core.util.LiveDataUtil.clearAll
 import com.quadrantapp.feature_price.sub.chart.ui.mapper.BarChartModelMapper
 import com.quadrantapp.feature_price.sub.chart.ui.model.BarChartModel
 import com.quadrantapp.service_price.domain.entity.CurrentPriceResponse
@@ -19,10 +20,10 @@ class MainViewModel @Inject constructor(
     getCurrentPriceUseCase: GetCurrentPriceUseCase
 ): BaseViewModel() {
 
-    val currentPrice: StatefulLiveData<Unit, CurrentPriceResponse> =
+    private val currentPrice: StatefulLiveData<Unit, CurrentPriceResponse> =
         StatefulLiveData(getCurrentPriceUseCase, viewModelScope)
 
-    val trackedDataCurrency = NonNullMutableLiveData(mutableListOf<BarChartModel>())
+    private val trackedDataCurrency = NonNullMutableLiveData(mutableListOf<BarChartModel>())
 
     override fun getKillableStatefulLiveData(): List<StatefulLiveData<*, *>> {
         return listOf(currentPrice)
@@ -45,5 +46,17 @@ class MainViewModel @Inject constructor(
                 Timber.e("onError -> $it")
             }
         )
+    }
+
+    fun listenTrackedDataCurrency(lifecycleOwner: LifecycleOwner, observer: (MutableList<BarChartModel>) -> Unit) {
+        trackedDataCurrency.observe(lifecycleOwner) {
+            Timber.d("=======")
+            Timber.d("tracked data: $it")
+            observer(it)
+        }
+    }
+
+    fun clearTrackedDataCurrency() {
+        trackedDataCurrency.clearAll()
     }
 }
