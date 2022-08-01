@@ -100,4 +100,6 @@ dependencies {
     }
 
     api(project(":service_price"))
+
+    testImplementation(project(":core_test"))
 }

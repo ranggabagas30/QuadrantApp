@@ -1,14 +1,15 @@
 package com.quadrantapp.core.base
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.quadrantapp.core.extension.StatefulLiveData
 import com.quadrantapp.core.model.Error
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 
-abstract class BaseViewModel : ViewModel() {
+abstract class BaseViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         val killables = getKillableStatefulLiveData()

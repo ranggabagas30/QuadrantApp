@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.activity.viewModels
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -16,10 +18,13 @@ import com.github.mikephil.charting.formatter.LargeValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.quadrantapp.core.base.BackButtonMode
 import com.quadrantapp.core.base.BaseViewBindingActivity
+import com.quadrantapp.core.util.LocationHelper
 import com.quadrantapp.feature_price.databinding.MainActivityBinding
 import com.quadrantapp.feature_price.sub.chart.ChartContract
-import com.quadrantapp.feature_price.sub.chart.ui.model.BarChartModel
+import com.quadrantapp.feature_price.sub.chart.ui.adapter.LatestFiveDataAdapter
 import com.quadrantapp.feature_price.sub.chart.ui.presenter.MainViewModel
+import com.quadrantapp.service_price.domain.entity.PriceHistoryEntity
+import timber.log.Timber
 import javax.inject.Inject
 
 class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
@@ -28,6 +33,8 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
     override lateinit var router: ChartContract.Router
 
     private val viewModel: MainViewModel by viewModels()
+
+    private lateinit var latestFiveDataAdapter: LatestFiveDataAdapter
 
     override val backButtonMode: BackButtonMode
         get() = BackButtonMode.CLOSE
@@ -43,14 +50,83 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
         )
         super.onCreate(savedInstanceState)
 
+        if (!LocationHelper.hasPermission(this)) {
+            LocationHelper.requestPermission(this)
+        } else {
+            requestData()
+        }
+
         setListener()
         setObservers()
         initView()
+    }
 
-        requestData()
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LocationHelper.requestCode && LocationHelper.hasPermission(this)) {
+            Timber.d("request location success")
+            requestData()
+        }
     }
 
     private fun initView() {
+        initChartView()
+        initRecyclerView()
+    }
+
+    private fun setListener() {
+        binding?.btnRefresh?.apply {
+            setOnClickListener { refreshLastData() }
+        }
+
+        binding?.btnClear?.apply {
+            setOnClickListener { clearChart() }
+        }
+    }
+
+    private fun setObservers() {
+        viewModel.run {
+            listenGetPriceHistories(
+                lifecycleOwner = this@MainActivity,
+                showHistories = {
+                    Timber.d("getPrice: onSuccess -> $it")
+                    plotDataToChart(it)
+
+                    if (isHasNotShowInitLastPriceHistories())
+                        refreshLastData()
+
+                },
+                showError = {
+                    Timber.e("getPrice: onError -> $it")
+                }
+            )
+            listenGetNLastPriceHistories(
+                lifecycleOwner = this@MainActivity,
+                showNLastHistories = {
+                    Timber.d("getNLastPrice: onSuccess -> $it")
+                    plotToRecyclerView(it)
+                },
+                showError = {
+                    Timber.e("getNLastPrice: onError -> $it")
+                }
+            )
+            listenCurrentPriceWorker(this@MainActivity)
+        }
+    }
+
+    private fun requestData() {
+        viewModel.triggerCurrentPriceWorker()
+    }
+
+    private fun refreshLastData() {
+        viewModel.getNLastPriceHistories(5)
+    }
+
+    private fun initChartView() {
         binding?.apply {
             chart1.description.isEnabled = false
             // scaling can now only be done on x- and y-axis separately
@@ -91,30 +167,21 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
         }
     }
 
-    private fun setListener() {
-        binding?.btnRefresh?.apply {
-            setOnClickListener { requestData() }
-        }
-
-        binding?.btnClear?.apply {
-            setOnClickListener { clearChart() }
-        }
-    }
-
-    private fun setObservers() {
-        viewModel.run {
-            listenCurrentPrice(this@MainActivity)
-            listenTrackedDataCurrency(this@MainActivity) {
-                setupChart(it)
-            }
+    private fun initRecyclerView() {
+        latestFiveDataAdapter = LatestFiveDataAdapter()
+        binding?.apply {
+            rvLatestFiveData.adapter = latestFiveDataAdapter
+            rvLatestFiveData.addItemDecoration(
+                DividerItemDecoration(this@MainActivity, LinearLayoutManager.HORIZONTAL)
+            )
         }
     }
 
-    private fun requestData() {
-        viewModel.getCurrentPrice()
+    private fun plotToRecyclerView(list: List<PriceHistoryEntity>) {
+        latestFiveDataAdapter.submitList(list)
     }
 
-    private fun setupChart(trackedData: MutableList<BarChartModel>) {
+    private fun plotDataToChart(trackedData: List<PriceHistoryEntity>) {
         binding?.run {
 
             if (trackedData.isNotEmpty()) {
@@ -127,9 +194,6 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
                 val startIndex = 0
                 val endIndex = startIndex + groupCount
 
-                val startHour = 0
-                val endHour = 24
-
                 val values1 = ArrayList<BarEntry>()
                 val values2 = ArrayList<BarEntry>()
                 val values3 = ArrayList<BarEntry>()
@@ -138,19 +202,19 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
                     values1.add(
                         BarEntry(
                             i.toFloat(),
-                            trackedData[i].currencyList["USD"]?.currentPrice ?: 0.0f
+                            trackedData[i].USD
                         )
                     )
                     values2.add(
                         BarEntry(
                             i.toFloat(),
-                            trackedData[i].currencyList["EUR"]?.currentPrice ?: 0.0f
+                            trackedData[i].EUR
                         )
                     )
                     values3.add(
                         BarEntry(
                             i.toFloat(),
-                            trackedData[i].currencyList["GBP"]?.currentPrice ?: 0.0f
+                            trackedData[i].GBP
                         )
                     )
                 }
@@ -205,9 +269,9 @@ class MainActivity : BaseViewBindingActivity<MainActivityBinding>() {
 
     private fun clearChart() {
         binding?.run {
-            viewModel.clearTrackedDataCurrency()
             chart1.clearValues()
             chart1.clear()
+            refreshLastData()
         }
     }
 }

@@ -2,7 +2,7 @@
 
 buildscript {
     dependencies {
-        classpath("com.google.dagger:hilt-android-gradle-plugin:${Versions.hilt}")
+        classpath("com.google.dagger:hilt-android-gradle-plugin:${Versions.hiltAndroid}")
     }
 }
 

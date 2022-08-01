@@ -98,4 +98,6 @@ dependencies {
     }
 
     api(project(":core"))
+
+    testImplementation(project(":core_test"))
 }

@@ -11,7 +11,8 @@ object Versions {
     // general libs
     const val nav = "2.4.2"
     const val googleService = "4.3.3"
-    const val hilt = "2.42"
+    const val hiltAndroid = "2.42"
+    const val hilt = "1.0.0"
     const val lifecycle = "2.2.0"
     const val materialUi = "1.3.0-alpha01"
     const val viewPager = "1.1.0-alpha01"
@@ -121,10 +122,13 @@ object Versions {
 
     // test libs
     const val jUnit = "4.12"
-    const val mockitoCore = "2.23.0"
+    const val roboelectric = "4.8"
+    const val mockitoCore = "3.12.4"
     const val coroutineTest = "1.3.1"
     const val mockitoKotlin = "2.2.0"
     const val coreTesting = "2.1.0"
     const val androidJUnit = "1.1.1"
-    const val androidEspresso = "3.2.0"
+    const val androidEspresso = "3.4.0"
+    const val androidJUnitRunner = "1.4.0"
+    const val JUnitRules = "1.4.0"
 }

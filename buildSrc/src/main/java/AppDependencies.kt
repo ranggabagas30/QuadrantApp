@@ -7,7 +7,8 @@ object AppDependencies {
         "appCompat"                    to "androidx.appcompat:appcompat:${Versions.appCompat}",
         "core"                         to "androidx.core:core-ktx:${Versions.core}",
         "loggingInterceptor"           to "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}",
-        "hilt"                         to "com.google.dagger:hilt-android:${Versions.hilt}",
+        "hilt"                         to "com.google.dagger:hilt-android:${Versions.hiltAndroid}",
+        "hilt-work"                    to "androidx.hilt:hilt-work:${Versions.hilt}",
 
         "multidex"                     to "androidx.multidex:multidex:${Versions.multidex}",
         //"legacySupportV4"              to "androidx.legacy:legacy-support-v4:${Versions.legacySupportV4}",
@@ -32,7 +33,8 @@ object AppDependencies {
     )
 
     val coreKaptDependencies = mapOf(
-        "hiltKapt"                to "com.google.dagger:hilt-compiler:${Versions.hilt}"
+        "hiltAndroidKapt"         to "com.google.dagger:hilt-android-compiler:${Versions.hiltAndroid}",
+        "hiltKapt"                to "androidx.hilt:hilt-compiler:${Versions.hilt}"
     )
 
     val mainDependencies = mapOf(
@@ -101,10 +103,13 @@ object AppDependencies {
     )
 
     val androidTestImplementations = mapOf(
-        "coreTesting"       to "androidx.arch.core:core-testing:${Versions.coreTesting}",
-        "androidJUnit"      to "androidx.test.ext:junit:${Versions.androidJUnit}",
-        "androidEspresso"   to "androidx.test.espresso:espresso-core:${Versions.androidEspresso}",
-        "room"              to "androidx.room:room-testing:${Versions.room}",
+        "coreTesting"           to "androidx.arch.core:core-testing:${Versions.coreTesting}",
+        "androidJUnit"          to "androidx.test.ext:junit:${Versions.androidJUnit}",
+        "androidEspresso"       to "androidx.test.espresso:espresso-core:${Versions.androidEspresso}",
+        "androidJUnitRunner"    to "androidx.test:runner:${Versions.androidJUnitRunner}",
+        "JUnitRules"            to "androidx.test:rules:${Versions.JUnitRules}",
+        "room"                  to "androidx.room:room-testing:${Versions.room}",
+        "workManagerTest"       to "androidx.work:work-testing:${Versions.workManager}"
     )
 
     val chartDependencies = mapOf(

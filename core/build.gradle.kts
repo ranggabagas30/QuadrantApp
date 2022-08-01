@@ -105,4 +105,6 @@ dependencies {
     dependencyAndroidTestGroup.forEach {
         androidTestImplementationList(it)
     }
+
+    testImplementation(project(":core_test"))
 }
